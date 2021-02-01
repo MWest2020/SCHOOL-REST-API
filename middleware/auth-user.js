@@ -8,7 +8,6 @@ const bcrypt = require('bcrypt');
 const { User } = require('../db')
 
 
-
 //exports authenticateUser aysnc function
 exports.authenticateUser = async (req, res, next) => {
     //store error messages form else clauses
@@ -22,13 +21,16 @@ exports.authenticateUser = async (req, res, next) => {
     if(credentials){
         // Attempt to retrieve the user from the data store
        const user = await User.findOne({
-           where: { username: credentials.name}
+           where: { emailAddress: credentials.name}
        });
        
        //if data is retrieved from user(user doesn't return undefined), store the comparison of ... 
        if(user){
             const authenticated = bcrypt.compareSync(credentials.pass//stored in Authorization header
             , user.confirmedPassword)//stored in the user model
+            
+            //may try just user.password
+
             if(authenticated){
                 //if passwords match
                 console.log('Authentication successful');
@@ -36,7 +38,7 @@ exports.authenticateUser = async (req, res, next) => {
                 //store the user on the Request object
                 req.currentUser = user;
             } else {
-                message = `Authentication failure for username: ${user.username}`
+                message = `Authentication failure for username: ${user.name}`
             }
        } else {
            message = `User not found for ${credentials.name}`

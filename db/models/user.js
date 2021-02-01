@@ -5,19 +5,31 @@ const bcrypt = require('bcrypt');
 module.exports = (sequelize) => {
   class User extends Sequelize.Model {}
   User.init({
-    name: {
+    firstName: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
-          msg: 'A name is required',
+          msg: 'A first name is required',
         },
         notEmpty: {
-          msg: 'Please provide a name',
+          msg: 'Please provide a first name',
         }
       }
     },
-    email: {
+    lastName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A last name is required',
+        },
+        notEmpty: {
+          msg: 'Please provide a last name',
+        }
+      }
+    },
+    emailAddress: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
@@ -63,16 +75,7 @@ module.exports = (sequelize) => {
         }
         
     },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references:{
-        model: 'course',
-        key: 'ID',
-      },
-      field: 'user_id'
-
-    }
+    
   }, { sequelize,
   timestamps: false,
  });
