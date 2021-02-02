@@ -4,8 +4,10 @@
 const auth = require('basic-auth');
 //importing library to user compareSync() from bcrypt
 const bcrypt = require('bcrypt');
-//importing the User model module 
-const { User } = require('../db')
+
+
+// Get references to our models.
+const { User } = require('../models');
 
 
 //exports authenticateUser aysnc function
@@ -26,11 +28,8 @@ exports.authenticateUser = async (req, res, next) => {
        
        //if data is retrieved from user(user doesn't return undefined), store the comparison of ... 
        if(user){
-            const authenticated = bcrypt.compareSync(credentials.pass//stored in Authorization header
-            , user.confirmedPassword)//stored in the user model
+            const authenticated = bcrypt.compareSync(credentials.pass, user.password)//stored in the user model
             
-            //may try just user.password
-
             if(authenticated){
                 //if passwords match
                 console.log('Authentication successful');
@@ -38,7 +37,7 @@ exports.authenticateUser = async (req, res, next) => {
                 //store the user on the Request object
                 req.currentUser = user;
             } else {
-                message = `Authentication failure for username: ${user.name}`
+                message = `Authentication failure for username: ${user.emailAddress}`
             }
        } else {
            message = `User not found for ${credentials.name}`
@@ -62,8 +61,5 @@ exports.authenticateUser = async (req, res, next) => {
     } else{
         next();
     }
-
-
-
   };
 

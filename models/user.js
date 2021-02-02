@@ -1,9 +1,17 @@
 'use strict';
-const { DataTypes, Sequelize } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
 const bcrypt = require('bcrypt');
 
+const PROTECTED_ATTRIBUTES = ['password'];
+
 module.exports = (sequelize) => {
-  class User extends Sequelize.Model {}
+  class User extends Model {
+    
+
+
+
+  } // https://github.com/sequelize/sequelize/issues/2132
+
   User.init({
     firstName: {
       type: DataTypes.STRING,
@@ -32,7 +40,9 @@ module.exports = (sequelize) => {
     emailAddress: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: {
+        msg: "The email address you registered already exists in our database"
+      },
       validate: {
         notNull: {
           msg: 'An email address is required',
@@ -43,11 +53,11 @@ module.exports = (sequelize) => {
       }    
     },
     password: {
-      type: DataTypes.VIRTUAL,
+      type: DataTypes.STRING,
       allowNull: false,
       validate: {
         notNull: {
-          msg: 'An password is required',
+          msg: 'A password is required',
         },
         notEmpty: {
           msg: 'Please provide a password',
@@ -56,36 +66,51 @@ module.exports = (sequelize) => {
           args: [8, 129],
           msg: 'the message should be at least 8 characters long.'
         }
-      }
-    },
-    confirmedPassword: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        set(val){
-          if(val === this.password){
-            const hashedPassword = bcrypt.hashSync(val, 10);
-            this.setDataValue('confirmedPassword', hashedPassword);
-          }
-          
-        }, 
-        validate: {
-          notNull: {
-            msg: 'Both passwords must match'
-          }
-        }
+      },
+      set(val) {
         
+          const hashedPassword = bcrypt.hashSync(val, 10);
+          this.setDataValue('password', hashedPassword);
+        
+      },
+      
     },
+    // confirmedPassword: {
+    //     type: DataTypes.STRING,
+    //     allowNull: false,
+    //     set(val){
+    //       if(val === this.password){
+    //         const hashedPassword = bcrypt.hashSync(val, 10);
+    //         this.setDataValue('confirmedPassword', hashedPassword);
+    //       }
+          
+    //     }, 
+    //     validate: {
+    //       notNull: {
+    //         msg: 'Both passwords must match'
+    //       }
+    //     }
+        
+    // },
     
-  }, { sequelize,
-  timestamps: false,
- });
+  }, 
+  { 
+    sequelize,
+    timestamps: false,
+    scopes: {
+      withoutPassword: {
+        attributes: { exclude: ['password'] },
+      }
+    }
+  });
 
 
   User.associate = (models) => {
 
     User.hasMany(models.Course, {
       foreignKey: 'id',
-      sourcekey: 'userId',
+      allowNull: false,
+      // sourcekey: 'userId',
     })  
   };
 

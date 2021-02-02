@@ -2,19 +2,14 @@
 
 const express = require('express');
 const { asyncHandler } = require('../middleware/async-handler');
-
-const { models } = require('../db');
-
-// Get references to our models.
-const { User, Course } = models;
-
-
-// const { User, Course} = require('../db');
-// const model = require('../db');
-
-
 //for protected routes, importing the auth-user middleware
 const { authenticateUser }  = require('../middleware/auth-user');
+
+// Get references to our models.
+const { User, Course } = require('../models');
+
+
+
 
 
 // Construct a router instance.
@@ -22,31 +17,42 @@ const router = express.Router();
 
 // Route that returns a list of users. IF AND ONLY IF request is succesfully authenticated
 router.get('/users', authenticateUser,  asyncHandler(async(req, res) => {
-  try {
+  // try {
     const user = req.currentUser;
     res.status(200).json({ 
       firstName: user.firstName,
       lastName: user.lastName,
-      emailAddress: user.emailAddress, 
+      emailAddress: user.emailAddress
     });
     
   
-  } catch (error) {
-    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-      const errors = error.errors.map(err => err.message);
-      res.status(400).json({ errors });   
-    } else {
-      throw error;
-    }
+  // } catch (error) {
+  //   if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+  //     const errors = error.errors.map(err => err.message);
+  //     res.status(400).json({ errors });   
+  //   } else {
+  //     throw error;
+  //   }
  
-}}));
+}));
 
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
+  // if (!req.body.password) return res.status(400).json({ error: 'Please provide a value for password'});
   try {
-    await User.create(req.body);
     
-    res.location('/').status(201).json({ "message": "Account successfully created!" });
+    const user = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      emailAddress: req.body.emailAddress,
+      password: req.body.password
+    };
+
+    await User.create(user);
+    res.location('/')
+    .status(201)
+    .json({ "message": "Account successfully created!" })
+    .end();
     
   } catch (error) {
     if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
@@ -70,6 +76,7 @@ router.get('/courses', asyncHandler(async (req, res) => {
           as: 'Course Attending',
         },
       ],
+      
     });
 
     const resultCourses = courses.map( movie => movie.get({plain: true}));

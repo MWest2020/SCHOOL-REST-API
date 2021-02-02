@@ -1,6 +1,6 @@
 'use strict';
-const { Sequelize} = require('sequelize');
-const { sequelize } = require('./db');
+
+const { sequelize } = require('./models');
 
 
 // load modules
@@ -28,6 +28,21 @@ app.use(morgan('dev'));
 
 // Add routes.
 app.use('/api', routes);
+
+
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Connection has been established successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+})();
+
+
+
+
+
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {

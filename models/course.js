@@ -1,32 +1,33 @@
 'use strict';
-const { DataTypes, Sequelize } = require('sequelize');
+const { DataTypes, Model } = require('sequelize');
+
 
 module.exports = (sequelize) => {
-  class Course extends Sequelize.Model {}
+  class Course extends Model {}
   Course.init({
     title: {
       type: DataTypes.STRING,
-    //   allowNull: false,
-    //   validate: {
-    //     notNull: {
-    //       msg: 'A title is required',
-    //     },
-    //     notEmpty: {
-    //       msg: 'Please provide a title',
-    //     }
-    //   }
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A title is required',
+        },
+        notEmpty: {
+          msg: 'Please provide a title',
+        }
+      }
     },
     description: {
       type: DataTypes.TEXT,
-    //   allowNull: false,
-    //   validate: {
-    //     notNull: {
-    //       msg: 'An email address is required',
-    //     },
-    //     isEmail: {
-    //       msg: 'Please provide a valid email address',
-    //     }
-    //   }    
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'An email address is required',
+        },
+        isEmail: {
+          msg: 'Please provide a valid email address',
+        }
+      }    
     },
     estimatedTime: {
       type: DataTypes.STRING,
@@ -59,21 +60,24 @@ module.exports = (sequelize) => {
         // }
         
     },
-    userID: {
+    userId: {
       type: DataTypes.INTEGER,
       foreignKey: {
         fieldName: "id",
+        allowNull: false,
       }
     }
   }, { 
     sequelize, 
     timestamps: false,
+    
    });
 
   Course.associate = (models) => {
     Course.belongsTo(models.User, {
       foreignKey: {
         fieldName:'id',
+        allowNull: false,
       },
   });
   };
