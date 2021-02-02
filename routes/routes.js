@@ -38,7 +38,7 @@ router.get('/users', authenticateUser,  asyncHandler(async(req, res) => {
 
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
-  // if (!req.body.password) return res.status(400).json({ error: 'Please provide a value for password'});
+  
   try {
     
     const user = {
