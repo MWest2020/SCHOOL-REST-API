@@ -19,6 +19,7 @@ const router = express.Router();
 router.get('/users', authenticateUser,  asyncHandler(async(req, res) => {
   // try {
     const user = req.currentUser;
+    
     res.status(200).json({ 
       firstName: user.firstName,
       lastName: user.lastName,
@@ -66,38 +67,24 @@ router.post('/users', asyncHandler(async (req, res) => {
 
 
 // A /api/courses GET route that will return a list of all courses including the User that owns each course and a 200 HTTP status code.
+
+
 // Main route for page load and search query
+// A GET route that retrieves the list of courses.
 router.get('/courses', asyncHandler(async (req, res) => {
-  
-    const courses = await Course.findAll({
-      include: [
-        {
-          model: User, //associates the Course model with the User model
-          as: 'Course Attending',
-        },
-      ],
-      
-    });
+  const courses = await Course.findAll({
+    attributes: {exclude: ['createdAt', 'updatedAt', 'userId']},
+    include: [{
+      model: User,
+      attributes: {exclude: ['createdAt', 'updatedAt', 'password']}
+    }]
+  });
 
-    const resultCourses = courses.map( movie => movie.get({plain: true}));
+  res.status(200).json({
+      courses
+  });
+}));
 
-    const users = await User.findAll({
-      include: [
-        {
-          model: Course,
-          as: 'Course Attending',
-        },
-      ],
-    });
-
-    resultUsers = JSON.stringify(users, null, 2);
-
-    res.json({resultCourses}, {resultUsers});
-    process.exit();
-
-  } ))
-  
-  
 
 
 
@@ -109,7 +96,69 @@ router.get('/courses', asyncHandler(async (req, res) => {
 
 // A /api/courses/:id GET route that will return the corresponding course along with the User that owns that course and a 200 HTTP status code.
 
-// A /api/courses POST route that will create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+  const courses = await Course.findByPk( req.params.id ,{
+    attributes: {exclude: ['createdAt', 'updatedAt', 'userId']},
+    include: [{
+      model: User,
+      attributes: {exclude: ['createdAt', 'updatedAt', 'password']}
+    }]
+  });
+  
+
+  
+
+  // A /api/courses POST route that will create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
+
+
+  // CHANGE route to post course....
+  
+  router.post('/courses', asyncHandler(async (req, res) => {
+  
+    try {
+      
+      const user = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        emailAddress: req.body.emailAddress,
+        password: req.body.password
+      };
+  
+      await User.create(user);
+      res.location('/')
+      .status(201)
+      .json({ "message": "Account successfully created!" })
+      .end();
+      
+    } catch (error) {
+      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });   
+      } else {
+        throw error;
+      }
+    }
+  }));
+  res.status(200).json({
+      courses
+  });
+}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // A /api/courses/:id PUT route that will update the corresponding course and return a 204 HTTP status code and no content.
 

@@ -97,11 +97,11 @@ module.exports = (sequelize) => {
   { 
     sequelize,
     timestamps: false,
-    scopes: {
-      withoutPassword: {
-        attributes: { exclude: ['password'] },
-      }
-    }
+    // scopes: {
+    //   password: {
+    //     attributes: { exclude: ['password'] },
+    //   }
+    // }
   });
 
 
