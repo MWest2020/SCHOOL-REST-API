@@ -13,6 +13,11 @@ module.exports = (sequelize) => {
   } // https://github.com/sequelize/sequelize/issues/2132
 
   User.init({
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
     firstName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -96,24 +101,31 @@ module.exports = (sequelize) => {
   }, 
   { 
     sequelize,
-    timestamps: false,
-    // scopes: {
-    //   password: {
-    //     attributes: { exclude: ['password'] },
-    //   }
-    // }
+    
   });
 
 
   User.associate = (models) => {
 
     User.hasMany(models.Course, {
-      foreignKey: 'id',
-      allowNull: false,
-      // sourcekey: 'userId',
-    })  
+      foreignKey: {
+        fieldName:'id',
+        allowNull: false,
+      },
+      
+    });  
   };
 
 
   return User;
 };
+
+
+(async () => {
+  try {
+    await User.sync();
+    console.log('Users table synced successfully.');
+  } catch (error) {
+    console.error('Unable to sync Users table successfully:', error);
+  }
+});
