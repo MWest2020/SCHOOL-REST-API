@@ -1,3 +1,6 @@
+//FOR FUTURE REFERENCE -- MAKE IT CONVENTION TO STORE MODELS LIKE THIS
+
+
 // const db = {};
 
 // db.Sequelize = Sequelize;

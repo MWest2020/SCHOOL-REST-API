@@ -1,55 +1,46 @@
 'use strict';
 
 const express = require('express');
+
+// import middleware
 const { asyncHandler } = require('../middleware/async-handler');
-//for protected routes, importing the auth-user middleware
 const { authenticateUser }  = require('../middleware/auth-user');
 
 // Get references to our models.
 const { User, Course } = require('../models');
-
-
-
-
 
 // Construct a router instance.
 const router = express.Router();
 
 // Route that returns a list of users. IF AND ONLY IF request is succesfully authenticated
 router.get('/users', authenticateUser,  asyncHandler(async(req, res) => {
-  // try {
+  try {
     const user = req.currentUser;
     
-    res.status(200).json({ 
-      firstName: user.firstName,
-      lastName: user.lastName,
-      emailAddress: user.emailAddress,
-      id: user.id
+    res.status(200)
+      .json({ 
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailAddress: user.emailAddress,
+        id: user.id
     });
-    
   
-  // } catch (error) {
-  //   if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-  //     const errors = error.errors.map(err => err.message);
-  //     res.status(400).json({ errors });   
-  //   } else {
-  //     throw error;
-  //   }
- 
+  } catch (error) {
+    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      const errors = error.errors.map(err => err.message);
+      
+      res.status(400)
+        .json({ errors });   
+    } else {
+      throw error;
+    }
+  }
 }));
 
 // Route that creates a new user.
 router.post('/users', asyncHandler(async (req, res) => {
   
   try {
-    
-    // const user = {
-    //   firstName: req.body.firstName,
-    //   lastName: req.body.lastName,
-    //   emailAddress: req.body.emailAddress,
-    //   password: req.body.password
-    // };
-    //try just req.body during refactor cleanup
     await User.create(req.body);
     res.location('/')
     .status(201)
@@ -57,9 +48,11 @@ router.post('/users', asyncHandler(async (req, res) => {
     .end();
     
   } catch (error) {
-    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+    if (error.name === 'SequelizeValidationError' || 
+        error.name === 'SequelizeUniqueConstraintError') {
       const errors = error.errors.map(err => err.message);
-      res.status(400).json({ errors });   
+      res.status(400)
+      .json({ errors });   
     } else {
       throw error;
     }
@@ -70,53 +63,80 @@ router.post('/users', asyncHandler(async (req, res) => {
 
 // Main route for page load and search query
 // A GET route that retrieves the list of courses.
+
 router.get('/courses', asyncHandler(async (req, res) => {
   const courses = await Course.findAll({
-    attributes: {exclude: ['createdAt', 'updatedAt', 'userId']},
+    attributes: { 
+      exclude: [
+        'createdAt', 
+        'updatedAt', 
+        'userId'
+      ]},
     include: [{
       model: User,
-      attributes: {exclude: ['createdAt', 'updatedAt', 'password']}
+      attributes: {
+        exclude: [
+          'createdAt', 
+          'updatedAt', 
+          'password'
+        ]
+      }
     }]
   });
 
   res.status(200).json({
-      courses
+    courses
   });
 }));
 
 // A /api/courses/:id GET route that will return the corresponding course along with the User that owns that course and a 200 HTTP status code.
 
 router.get('/courses/:id', asyncHandler(async (req, res) => {
-  const courses = await Course.findByPk( req.params.id ,{
-    attributes: {exclude: ['createdAt', 'updatedAt', 'userId']},
-    include: [{
+  const courses = await Course.findByPk( req.params.id , {
+    attributes: { 
+      exclude: [
+        'createdAt', 
+        'updatedAt', 
+        'userId'
+        ]
+      },
+    include: [
+      {
       model: User,
-      attributes: {exclude: ['createdAt', 'updatedAt', 'password']}
+      attributes: { 
+        exclude: [
+          'createdAt', 
+          'updatedAt', 
+          'password'
+        ]
+      }
     }]
   });
+
   res.status(200).json({
     courses
-});
+  });
 }));
 
-  
 
   // A /api/courses POST route that will create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
  
-router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
+router.post('/courses',  asyncHandler(async (req, res) => {
   try {
-      const course = await Course.create(req.body);
-      
-      res.location(`/courses/${course.id}`)
-      .status(201)
-      // .json({ "message": "Course successfully Added!" })
-      .end();
+    const course = await Course.create(req.body);
+    
+    res.location(`/courses/${course.id}`)
+        .status(201)
+        .end();
     } catch (error) {
       console.log('ERROR: ', error.name);
   
-      if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
+      if ( error.name === 'SequelizeValidationError' || 
+           error.name === 'SequelizeUniqueConstraintError') {
         const errors = error.errors.map(err => err.message);
-        res.status(400).json({ errors });   
+        
+        res.status(400)
+        .json({ errors });   
       } else {
         throw error;
       }
@@ -125,16 +145,36 @@ router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
 
 // A /api/courses/:id PUT route that will update the corresponding course and return a 204 HTTP status code and no content.
 
+router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  // ref: https://medium.com/@sarahdherr/sequelizes-update-method-example-included-39dfed6821d
+  await Course.update(req.body,  {
+    returning: true, 
+    where: {
+      id: req.params.id 
+    }
+  });
+
+ res.location('/')
+    .status(204)
+    .end();
+}));
+
+
 // A /api/courses/:id DELETE route that will delete the corresponding course and return a 204 HTTP status code and no content.
 
+router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+  
+  await Course.destroy({
+    where: {
+      id: req.params.id
+    }
+  });
 
+ res.location('/')
+    .status(204)
+    .end();
 
-
-
-
-
-
-
+}));
 
 module.exports = router;
 

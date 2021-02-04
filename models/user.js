@@ -1,17 +1,11 @@
 'use strict';
+// imports modules from sequelize to use the dataype validation and the models to instantialize
 const { DataTypes, Model } = require('sequelize');
+// standard module for hashing passwords
 const bcrypt = require('bcrypt');
 
-const PROTECTED_ATTRIBUTES = ['password'];
-
 module.exports = (sequelize) => {
-  class User extends Model {
-    
-
-
-
-  } // https://github.com/sequelize/sequelize/issues/2132
-
+  class User extends Model {}
   User.init({
     id: {
       type: DataTypes.INTEGER,
@@ -68,64 +62,29 @@ module.exports = (sequelize) => {
           msg: 'Please provide a password',
         },
         len: {
-          args: [8, 129],
+          args: [8, 129], //don't like the max length of 20 because of security reasons. 
           msg: 'the message should be at least 8 characters long.'
         }
       },
-      set(val) {
-        
-          const hashedPassword = bcrypt.hashSync(val, 10);
-          this.setDataValue('password', hashedPassword);
-        
+      set(val) {  
+        const hashedPassword = bcrypt.hashSync(val, 10);
+        this.setDataValue('password', hashedPassword);
       },
-      
     },
-    // confirmedPassword: {
-    //     type: DataTypes.STRING,
-    //     allowNull: false,
-    //     set(val){
-    //       if(val === this.password){
-    //         const hashedPassword = bcrypt.hashSync(val, 10);
-    //         this.setDataValue('confirmedPassword', hashedPassword);
-    //       }
-          
-    //     }, 
-    //     validate: {
-    //       notNull: {
-    //         msg: 'Both passwords must match'
-    //       }
-    //     }
-        
-    // },
-    
   }, 
   { 
     sequelize,
-    
   });
 
 
   User.associate = (models) => {
-
     User.hasMany(models.Course, {
       foreignKey: {
         fieldName:'id',
         allowNull: false,
       },
-      
     });  
   };
 
-
   return User;
 };
-
-
-(async () => {
-  try {
-    await User.sync();
-    console.log('Users table synced successfully.');
-  } catch (error) {
-    console.error('Unable to sync Users table successfully:', error);
-  }
-});

@@ -1,6 +1,6 @@
 'use strict';
+// imports modules from sequelize to use the dataype validation and the models to instantialize
 const { DataTypes, Model } = require('sequelize');
-
 
 module.exports = (sequelize) => {
   class Course extends Model {}
@@ -36,19 +36,9 @@ module.exports = (sequelize) => {
       },
       estimatedTime: {
         type: DataTypes.STRING,
-        allowNull: false,
-        // validate: {
-        //   notNull: {
-        //     msg: 'An estimate is required',
-        //   },
-        //   notEmpty: {
-        //     msg: 'Please provide a estimate time to complete the course',
-        //   },
-        // },
       },
       materialsNeeded: {
-            type: DataTypes.STRING,
-            // allowNull: false,
+        type: DataTypes.STRING,
       },
       userId: {
         type: DataTypes.INTEGER,
@@ -58,12 +48,9 @@ module.exports = (sequelize) => {
         }
       },
     },
-   
-  { 
+   { 
     sequelize, 
-    // timestamps: false,
-    
-  });
+   });
 
   Course.associate = (models) => {
     Course.belongsTo(models.User, {
@@ -75,12 +62,3 @@ module.exports = (sequelize) => {
   };
   return Course;
 };
-
-(async () => {
-  try {
-    await Course.sync();
-    console.log('Course table synced successfully.');
-  } catch (error) {
-    console.error('Unable to sync course table successfully:', error);
-  }
-});
