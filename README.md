@@ -16,4 +16,7 @@ SQL, sequelize, sqlite3
 Node.js
 Express
 
-The app is started by downloading all the files and by running the npm install and then npm start. Any modern browser should support the code used for this project.
+Applications:
+PostmanCanary
+
+The app is started by downloading all the files and by running the ```npm install``` and then ```npm start```. Routs can be tested via PostmanCanary. Import the test schema provided for convenience.
