@@ -26,8 +26,9 @@ router.get('/users', authenticateUser,  asyncHandler(async(req, res) => {
     });
   
   } catch (error) {
-    if (error.name === 'SequelizeValidationError' || error.name === 'SequelizeUniqueConstraintError') {
-      const errors = error.errors.map(err => err.message);
+    if (error.name === 'SequelizeValidationError' || 
+        error.name === 'SequelizeUniqueConstraintError') {
+        const errors = error.errors.map(err => err.message);
       
       res.status(400)
         .json({ errors });   
@@ -44,7 +45,6 @@ router.post('/users', asyncHandler(async (req, res) => {
     await User.create(req.body);
     res.location('/')
     .status(201)
-    .json({ "message": "Account successfully created!" })
     .end();
     
   } catch (error) {
@@ -121,7 +121,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
   // A /api/courses POST route that will create a new course, set the Location header to the URI for the newly created course, and return a 201 HTTP status code and no content.
  
-router.post('/courses',  asyncHandler(async (req, res) => {
+router.post('/courses',  authenticateUser, asyncHandler(async (req, res) => {
   try {
     const course = await Course.create(req.body);
     
@@ -146,35 +146,71 @@ router.post('/courses',  asyncHandler(async (req, res) => {
 // A /api/courses/:id PUT route that will update the corresponding course and return a 204 HTTP status code and no content.
 
 router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-  // ref: https://medium.com/@sarahdherr/sequelizes-update-method-example-included-39dfed6821d
-  await Course.update(req.body,  {
-    returning: true, 
-    where: {
-      id: req.params.id 
-    }
-  });
+  try {
+    // ref: https://medium.com/@sarahdherr/sequelizes-update-method-example-included-39dfed6821d
+    const course = await Course.update(req.body,  {
+      returning: true, 
+      where: {
+        id: req.params.id 
+      }
+    });
 
- res.location('/')
-    .status(204)
-    .end();
+    if(course){
+      const user = await User.findByPk(req.params.id);
+      if(user.emailAddress === req.currentUser){
+        res.location('/')
+        .status(204)
+        .end();
+      } else { 
+        res.status(403)
+        .end();
+      }
+
+    } else {
+      res.status(404)
+        .end();
+    }
+  } catch (error) {
+    console.log('ERROR: ', error.name);
+
+    if ( error.name === 'SequelizeValidationError' || 
+         error.name === 'SequelizeUniqueConstraintError') {
+      const errors = error.errors.map(err => err.message);
+      
+      res.status(400)
+      .json({ errors });   
+    } else {
+      throw error;
+    }
+  }
+
 }));
 
 
 // A /api/courses/:id DELETE route that will delete the corresponding course and return a 204 HTTP status code and no content.
 
-router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
-  
-  await Course.destroy({
-    where: {
-      id: req.params.id
+
+
+router.delete('/courses/:id', authenticateUser, asyncHandler(async(req, res) => {
+  const course = await Course.findByPk(req.params.id);
+  if(course) {
+    if (req.currentUser.id == course.userId) {
+      await course.destroy();
+      res.status(204).send();
+    } else {
+      res.status(403).json({ Forbidden: "Unauthorized User" });
     }
-  });
-
- res.location('/')
-    .status(204)
-    .end();
-
+  } else {
+    res.status(404).send();
+  }
 }));
+
+
+
+
+
+
+
 
 module.exports = router;
 
