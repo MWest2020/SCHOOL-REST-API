@@ -20,3 +20,5 @@ Applications:
 PostmanCanary
 
 The app is started by downloading all the files and by running the ```npm install``` and then ```npm start```. Routs can be tested via PostmanCanary. Import the test schema provided for convenience.
+
+Once installed, use the ```npx run seed``` command to initialize the database.
