@@ -7,7 +7,8 @@ const { asyncHandler } = require('../middleware/async-handler');
 const { authenticateUser }  = require('../middleware/auth-user');
 
 // Get references to our models.
-const { User, Course } = require('../models');
+const { User, 
+        Course } = require('../models');
 
 // Construct a router instance.
 const router = express.Router();
@@ -84,7 +85,8 @@ router.get('/courses', asyncHandler(async (req, res) => {
     }]
   });
 
-  res.status(200).json({
+  res.status(200)
+    .json({
     courses
   });
 }));
@@ -144,47 +146,39 @@ router.post('/courses',  authenticateUser, asyncHandler(async (req, res) => {
 }));
 
 // A /api/courses/:id PUT route that will update the corresponding course and return a 204 HTTP status code and no content.
-
-router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
+router.put('/courses/:id', authenticateUser, asyncHandler( async (req, res) => {
+  const course = await Course.findByPk(req.params.id);
   try {
-    // ref: https://medium.com/@sarahdherr/sequelizes-update-method-example-included-39dfed6821d
-    const course = await Course.update(req.body,  {
-      returning: true, 
-      where: {
-        id: req.params.id 
-      }
-    });
-
-    if(course){
-      const user = await User.findByPk(req.params.id);
-      if(user.emailAddress === req.currentUser){
-        res.location('/')
-        .status(204)
-        .end();
-      } else { 
-        res.status(403)
-        .end();
-      }
-
-    } else {
-      res.status(404)
-        .end();
-    }
-  } catch (error) {
-    console.log('ERROR: ', error.name);
-
-    if ( error.name === 'SequelizeValidationError' || 
-         error.name === 'SequelizeUniqueConstraintError') {
-      const errors = error.errors.map(err => err.message);
-      
-      res.status(400)
-      .json({ errors });   
-    } else {
-      throw error;
-    }
+     if (course) {
+        
+        if(req.currentUser.id === course.userId) {
+           await course.update(req.body);
+           res.status(204)
+            .end();
+        } else {
+           res.status(403)
+            .json({
+              message: "You shall not pass! Access prohibited --Forbidden"
+             })
+        }
+     } else {
+        res.status(404)
+          .json({
+           message: "That course is not in our database"
+          })
+     }
+  } catch(error) {
+     if (error.name === 'SequelizeValidationError' || 
+        error.name === 'SequelizeUniqueConstraintError') {
+        const errors = error.errors.map(err => err.message);
+        res.status(400).json({ errors });
+     } else {
+        throw error;
+     }
   }
 
 }));
+
 
 
 // A /api/courses/:id DELETE route that will delete the corresponding course and return a 204 HTTP status code and no content.
